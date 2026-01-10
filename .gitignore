@@ -27,3 +27,7 @@ venv/
 *.pkl
 *.h5
 *.joblib
+
+# Submissions
+submissions/*.csv
+!submissions/.gitkeep
