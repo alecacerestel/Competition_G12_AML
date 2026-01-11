@@ -31,3 +31,6 @@ venv/
 # Submissions
 submissions/*.csv
 !submissions/.gitkeep
+
+# MACOS
+.DS_Store
