@@ -4,6 +4,7 @@ class Evaluator:
     def __init__(self):
         pass
     
+    @staticmethod
     def calculate_mrr(y_true_ids, y_pred_top10):
         """
         y_true_ids: List with the real IDs (from y_train or y_val)
@@ -20,6 +21,7 @@ class Evaluator:
                 
         return np.mean(rr_scores)
     
+    @staticmethod
     def calculate_action_accuracy(y_true_actions, y_pred_actions):
         """
         y_true_actions: list of real actions (0 o 1)
@@ -30,6 +32,7 @@ class Evaluator:
         
         return accuracy
 
+    @staticmethod
     def calculate_final_score(mrr_score, action_accuracy):
         """
         mrr_score: MRR score
