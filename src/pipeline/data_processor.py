@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 from typing import List, Tuple, Dict
 
-from utils.config import (
+from src.utils.config import (
     X_TRAIN_FILE, Y_TRAIN_FILE, X_TEST_FILE, JOB_LISTINGS_FILE
 )
 
@@ -25,18 +25,18 @@ class DataProcessor:
         self.x_test = pd.read_csv(X_TEST_FILE)
 
         return self.jobs, self.x_train, self.y_train, self.x_test
+    
     @staticmethod
-    def parse_sequence(self, sequence_str: str) -> List:
+    def parse_sequence(sequence_str: str) -> List:
         try:
             return ast.literal_eval(sequence_str)
-        except:
+        except Exception:
             return []
 
     @staticmethod
-    def prepare_sequences(self, df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_sequences(df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
-        df['jobs_list'] = df['job_ids'].apply(self.parse_sequence)
-        df['actions_list'] = df['actions'].apply(self.parse_sequence)
-        df['seq_length'] = df['jobs_list'].apply(len)
-        
+        df["jobs_list"] = df["job_ids"].apply(DataProcessor.parse_sequence)
+        df["actions_list"] = df["actions"].apply(DataProcessor.parse_sequence)
+        df["seq_length"] = df["jobs_list"].apply(len)
         return df
