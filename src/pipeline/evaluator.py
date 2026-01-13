@@ -13,11 +13,9 @@ class Evaluator:
         
         for true_id, pred_list in zip(y_true_ids, y_pred_top10):
             if true_id in pred_list:
-                # El ranking es el índice + 1 (porque el índice empieza en 0)
                 rank = pred_list.index(true_id) + 1
                 rr_scores.append(1.0 / rank)
             else:
-                # Si el job real no está en tu Top 10, sumas 0 
                 rr_scores.append(0.0)
                 
         return np.mean(rr_scores)

@@ -25,6 +25,7 @@ class DataProcessor:
         self.x_test = pd.read_csv(X_TEST_FILE)
 
         return self.jobs, self.x_train, self.y_train, self.x_test
+    
     @staticmethod
     def parse_sequence(self, sequence_str: str) -> List:
         try:
