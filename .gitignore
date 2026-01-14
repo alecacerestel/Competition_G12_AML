@@ -34,3 +34,6 @@ submissions/*.csv
 
 # MACOS
 .DS_Store
+
+# Mateo things
+docs/
