@@ -80,9 +80,10 @@ def main():
         y_pred_top10_val.append(top_10_jobs)
         y_pred_actions_val.append(applies_for)
     
-    # Extract true actions (1 if user viewed at least one job, 0 otherwise)
+    # Extract true actions from y_val_split
     for idx, row in y_val_split.iterrows():
-        y_true_actions_val.append(1)  # Since they all appear in y_train, they all applied
+        action = 1 if row['action'] == 'apply' else 0
+        y_true_actions_val.append(action)
     
     print(f"✓ Generated {len(y_pred_top10_val)} predictions")
     
@@ -133,14 +134,22 @@ def main():
     
     # Step 9: Prepare submission
     print("\n[STEP 9] Preparing submission...")
+    # Convert numpy int64 to regular int
+    y_pred_top10_test_clean = [
+        [int(job_id) for job_id in jobs] for jobs in y_pred_top10_test
+    ]
+    
     submission_df = pd.DataFrame({
-        'session_id': x_test['session_id'],
-        'predicted_jobs': y_pred_top10_test,
+        'session_id': x_test['session_id'].values,
+        'predicted_jobs': y_pred_top10_test_clean,
         'applies_for': y_pred_actions_test
     })
     
     submission_path = Path(__file__).parent.parent.parent / 'submissions' / 'predictions.csv'
     submission_path.parent.mkdir(exist_ok=True)
+    # Force overwrite by removing if exists
+    if submission_path.exists():
+        submission_path.unlink()
     submission_df.to_csv(submission_path, index=False)
     print(f"✓ Submission saved to {submission_path}")
     
