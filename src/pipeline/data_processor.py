@@ -70,6 +70,9 @@ class DataProcessor:
         if 'session' in feature_types:
             df = self.feature_engineer.extract_session_features(df)
         
+        if 'experience' in feature_types:
+            df = self.feature_engineer.extract_experience_level_features(df)
+        
         if 'text' in feature_types:
             df = self.feature_engineer.extract_job_text_features(df)
         

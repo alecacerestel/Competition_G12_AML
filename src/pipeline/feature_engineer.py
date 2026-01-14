@@ -160,6 +160,58 @@ class FeatureEngineer:
             
         return df
     
+    def extract_experience_level_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Extract experience level (jr/sr) from job descriptions summary
+        """
+        print("Extracting experience level features...")
+        
+        # Load job descriptions
+        from pathlib import Path
+        job_desc_path = Path(__file__).parent.parent.parent / 'Data' / 'job_listing_feature' / 'job_descriptions.csv'
+        job_descriptions = pd.read_csv(job_desc_path, usecols=['job_id', 'summary'])
+        
+        # Create mapping: job_id -> experience_level
+        exp_mapping = {}
+        for _, row in job_descriptions.iterrows():
+            exp_mapping[row['job_id']] = self._extract_exp_level(row['summary'])
+        
+        # Apply to sequences - aggregate experience levels across the session
+        df['experience_level_senior'] = df['jobs_list'].apply(
+            lambda jobs: any(exp_mapping.get(j) == 'sr' for j in jobs)
+        )
+        df['experience_level_junior'] = df['jobs_list'].apply(
+            lambda jobs: any(exp_mapping.get(j) == 'jr' for j in jobs)
+        )
+        df['experience_level_senior_ratio'] = df['jobs_list'].apply(
+            lambda jobs: sum(1 for j in jobs if exp_mapping.get(j) == 'sr') / len(jobs) if len(jobs) > 0 else 0
+        )
+        df['experience_level_junior_ratio'] = df['jobs_list'].apply(
+            lambda jobs: sum(1 for j in jobs if exp_mapping.get(j) == 'jr') / len(jobs) if len(jobs) > 0 else 0
+        )
+        
+        return df
+    
+    @staticmethod
+    def _extract_exp_level(summary: str) -> str:
+        """
+        Extract experience level from job summary text
+        """
+        if pd.isna(summary):
+            return None
+        
+        summary_lower = summary.lower()
+        
+        # Check for senior patterns
+        if any(pattern in summary_lower for pattern in ['senior', 'sr.', 'sr ']):
+            return 'sr'
+        
+        # Check for junior patterns
+        if any(pattern in summary_lower for pattern in ['junior', 'jr.', 'jr ']):
+            return 'jr'
+        
+        return None
+    
     def extract_job_text_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Extract NLP-based features from job text similarity
