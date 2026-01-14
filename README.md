@@ -10,6 +10,10 @@ Machine learning challenge for job listing classification
 
 **link Rapport**: [Rapport de projet](https://drive.google.com/drive/u/0/folders/1YCL4CPkvpp2KI8DE986CrnSjX8JLxSXP)
 
+Code Objective
+===============
+- The top 10 jobs a candidate is most likely to explore next.
+- The candidate’s next action. It can be view or apply.
 
 
 PROJECT ROADMAP
@@ -26,9 +30,9 @@ Phase 2: Baseline Models
 - Temporal cross-validation
 
 Phase 3: Feature Engineering
-- Sequence features (order, recency, frequency) - ahi esta malparidos
-- Job features (text similarity with NLP) - ahi esta malparidos  
-- Session features (behavior patterns) - ahi esta malparidos
+- Sequence features (order, recency, frequency)
+- Job features (text similarity with NLP)  
+- Session features (behavior patterns) 
 
 Phase 4: Modeling
 - Collaborative Filtering (item-item, user-item)
