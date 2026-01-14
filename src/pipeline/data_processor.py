@@ -73,4 +73,25 @@ class DataProcessor:
         if 'text' in feature_types:
             df = self.feature_engineer.extract_job_text_features(df)
         
-        return df
+        return df    
+    def split_train_test(self, test_size: float = 0.2, random_state: int = 42) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Split training data into train and validation sets.
+        
+        Args:
+            test_size: Proportion of data for validation (default: 0.2)
+            random_state: Random seed for reproducibility
+            
+        Returns:
+            tuple: (x_train, x_val, y_train, y_val)
+        """
+        if self.x_train is None or self.y_train is None:
+            raise ValueError("Data not loaded. Call load_data() first.")
+        
+        x_train_split, x_val_split, y_train_split, y_val_split = train_test_split(
+            self.x_train, self.y_train,
+            test_size=test_size,
+            random_state=random_state
+        )
+        
+        return x_train_split, x_val_split, y_train_split, y_val_split
