@@ -3,6 +3,7 @@ import json
 import ast
 from pathlib import Path
 from typing import List, Tuple, Dict
+from sklearn.model_selection import train_test_split
 
 from src.utils.config import (
     X_TRAIN_FILE, Y_TRAIN_FILE, X_TEST_FILE, JOB_LISTINGS_FILE
