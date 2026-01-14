@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import pandas as pd
 import numpy as np
 from pipeline.data_processor import DataProcessor
-from pipeline.model_trainer import ModelTrainer
+from pipeline.model_trainer import CollaborativeFilteringRecommender
 from pipeline.evaluator import Evaluator
 
 
@@ -47,7 +47,7 @@ def main():
     
     # Step 4: Build interaction matrix on training data
     print("\n[STEP 4] Building interaction matrix...")
-    trainer = ModelTrainer()
+    trainer = CollaborativeFilteringRecommender()
     R_train, session_cats, job_cats, _ = trainer.build_interaction_matrix(
         x_train_split, y_train_split
     )
