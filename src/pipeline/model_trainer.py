@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-class ModelTrainer:
+class CollaborativeFilteringRecommender:
     """
     Collaborative filtering model trainer for job recommendations.
     
@@ -120,12 +120,12 @@ class ModelTrainer:
                 - p_c_average: average score for top 10 jobs
         """
         # 1. Find similar users
-        top_k_idx, sims = ModelTrainer.get_similar_users(
+        top_k_idx, sims = CollaborativeFilteringRecommender.get_similar_users(
             test_session_vector, R_train, k
         )
         
         if len(top_k_idx) == 0:
-            return ModelTrainer._get_popular_jobs(R_train, job_categories)
+            return CollaborativeFilteringRecommender._get_popular_jobs(R_train, job_categories)
         
         # 2. Calculate Pcj: weighted average of similar users' interactions
         relevant_users_matrix = R_train[top_k_idx]
@@ -133,7 +133,7 @@ class ModelTrainer:
         pcj_scores = np.asarray(weighted_matrix.sum(axis=0)).flatten() / sims.sum()
         
         # 3. Get Top 10 Jobs (excluding already viewed)
-        top_10_job_ids, p_c_average = ModelTrainer._get_top_10_jobs(
+        top_10_job_ids, p_c_average = CollaborativeFilteringRecommender._get_top_10_jobs(
             pcj_scores, test_session_vector, job_categories
         )
         
