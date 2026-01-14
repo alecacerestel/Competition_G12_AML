@@ -26,9 +26,9 @@ Phase 2: Baseline Models
 - Temporal cross-validation
 
 Phase 3: Feature Engineering
-- Sequence features (order, recency, frequency)
-- Job features (text similarity with NLP)
-- Session features (behavior patterns)
+- Sequence features (order, recency, frequency) - ahi esta malparidos
+- Job features (text similarity with NLP) - ahi esta malparidos  
+- Session features (behavior patterns) - ahi esta malparidos
 
 Phase 4: Modeling
 - Collaborative Filtering (item-item, user-item)

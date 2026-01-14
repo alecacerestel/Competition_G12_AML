@@ -4,3 +4,12 @@ scikit-learn
 matplotlib
 seaborn
 jupyter
+
+# NLP and text processing for feature engineering
+nltk
+spacy
+
+# Additional ML libraries
+xgboost
+lightgbm
+catboost
