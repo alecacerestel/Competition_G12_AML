@@ -4,10 +4,10 @@ import sys
 import pandas as pd
 
 # Ajuste o root do projeto se necessário
-PROJECT_ROOT = Path(__file__).resolve().parents[2]  # <-- era [1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from data_processor import DataProcessor  # se você já usa isso
+from data_processor import DataProcessor  
 
 
 # ---------- Helpers ----------
