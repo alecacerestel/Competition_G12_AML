@@ -13,3 +13,4 @@ spacy
 xgboost
 lightgbm
 catboost
+faiss-cpu
