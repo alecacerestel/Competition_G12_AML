@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 
 class CollaborativeFilteringRecommender:
@@ -92,7 +94,6 @@ class CollaborativeFilteringRecommender:
         valid_indices = np.where(similarities > 0)[0]
         
         if len(valid_indices) == 0:
-            print("Warning: No similar users found")
             return np.array([]), np.array([])
         
         # Get top k
@@ -177,3 +178,77 @@ class CollaborativeFilteringRecommender:
         p_c_average = np.mean(top_10_scores)
         
         return top_10_job_ids, p_c_average
+
+
+class ContentBasedRecommender:
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer(stop_words='english', max_features=10000, ngram_range=(1, 2))
+        self.tfidf_matrix = None
+        self.job_ids = None
+
+    def fit(self, job_df):
+        # Combinar title y summary para más contexto
+        job_df['combined'] = job_df['title'].fillna('') + ' ' + job_df['summary'].fillna('')
+        self.tfidf_matrix = self.vectorizer.fit_transform(job_df['combined'])
+        self.job_ids = job_df['job_id'].astype(int).values
+        self.job_index = {idx: i for i, idx in enumerate(self.job_ids)}
+
+    def get_recommendations(self, viewed_job_ids, top_n=10):
+        # 1. Obtenemos los índices de los trabajos vistos
+        indices = [self.job_index[jid] for jid in viewed_job_ids if jid in self.job_index]
+        
+        if not indices:
+            return [], 0.0
+
+        # 2. Creamos el perfil del usuario promediando sus vistas
+        user_profile = np.asarray(self.tfidf_matrix[indices].mean(axis=0))
+        
+        # 3. Calculamos similitud de este perfil contra todos los trabajos
+        # linear_kernel es más rápido que cosine_similarity para TF-IDF
+        cosine_sim = linear_kernel(user_profile, self.tfidf_matrix).flatten()
+        
+        # 4. Filtramos los que ya vio
+        for idx in indices:
+            cosine_sim[idx] = -1
+            
+        # 5. Top N
+        related_indices = cosine_sim.argsort()[-top_n:][::-1]
+        return [self.job_ids[i] for i in related_indices], np.mean(cosine_sim[related_indices])
+
+
+class HybridRecommender:
+    def __init__(self, cf_recommender, cb_recommender):
+        self.cf = cf_recommender
+        self.cb = cb_recommender
+
+    def predict_next_step(self, test_session_vector, R_train, job_categories, viewed_job_ids, k=50, theta=0.5):
+        """
+        Hybrid prediction: Use CF if similar users exist, otherwise use CB.
+        
+        Args:
+            test_session_vector: sparse matrix (1, n_items) with viewed jobs
+            R_train: training interaction matrix
+            job_categories: job category indices
+            viewed_job_ids: list of job IDs already viewed
+            k: number of similar users (default: 50)
+            theta: application prediction threshold (default: 0.5)
+            
+        Returns:
+            tuple: (top_10_job_ids, applies_for, p_c_average)
+        """
+        # Try CF first
+        top_k_idx, sims = self.cf.get_similar_users(test_session_vector, R_train, k)
+        
+        if len(top_k_idx) > 5:
+            # Use CF
+            return self.cf.predict_next_step(
+                test_session_vector, R_train, job_categories, k, theta
+            )
+        else:
+            # print("No similar users found in CF, switching to CB")
+            # Use CB
+            recommendations, avg_score = self.cb.get_recommendations(viewed_job_ids, top_n=10)
+            # For CB, we don't have applies_for prediction, so default to 0 or based on avg_score
+            applies_for = 1 if avg_score >= theta else 0
+        
+        return recommendations, applies_for, avg_score
