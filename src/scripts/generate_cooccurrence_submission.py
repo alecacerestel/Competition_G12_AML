@@ -4,7 +4,7 @@ from pathlib import Path
 import ast
 import sys
 from collections import defaultdict
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 
 sys.path.append(str(Path(__file__).parent.parent))
@@ -136,10 +136,10 @@ def train_action_classifier(x_train, y_train):
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     
-    clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    clf = SVC(C=1.0, kernel='rbf', gamma='scale', random_state=42, probability=True)
     clf.fit(X_train_scaled, y_train_binary)
     
-    print(f"Trained classifier on {len(X_train)} samples")
+    print(f"Trained SVM classifier on {len(X_train)} samples")
     
     return clf, scaler
 
