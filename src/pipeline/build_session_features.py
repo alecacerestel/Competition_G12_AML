@@ -62,6 +62,14 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["num_view"] = out["seq_length"] - out["num_apply"]
     out["apply_ratio"] = out["num_apply"] / out["seq_length"]
 
+    # 2.5) Convert actions to binary sequence (for neural models)
+    action_map = {"view": False, "apply": True}
+
+    def to_binary_actions(actions):
+        return [action_map[a] for a in actions]
+
+    out["actions_bin"] = out["actions_list"].apply(to_binary_actions)
+
     # 3) Recency -> last and previous actions and jobs
     out["last_job_id"] = out["jobs_list"].apply(last_item)
     out["prev_job_id"] = out["jobs_list"].apply(prev_item)
@@ -81,12 +89,14 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         "num_view",
         "num_apply",
         "apply_ratio",
-        "last_job_id",
-        "last_action",
-        "last_action_bin",
-        "prev_job_id",
-        "prev_action",
-        "prev_action_bin",
+        "actions_bin",
+
+        # "last_job_id",
+        # "last_action",
+        # "last_action_bin",
+        # "prev_job_id",
+        # "prev_action",
+        # "prev_action_bin",
         "action_changed",
     ]].copy()
 
