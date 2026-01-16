@@ -81,7 +81,7 @@ The model has **two independent components**:
 
 ---
 
-#### Component 2: Action Classifier
+#### Component 2: Action Classifier with SVM
 **Input (11 features):**
 1. `apply_ratio`: Proportion of applies in session (0.0 to 1.0)
 2. `view_ratio`: Proportion of views in session (0.0 to 1.0)
@@ -96,7 +96,7 @@ The model has **two independent components**:
 11. `top1_was_viewed`: Whether job #1 was already viewed in session (0 or 1)
 
 **Process:**
-1. Trains RandomForest on training data with ground truth
+1. Trains SVM (RBF kernel, C=1.0) on training data with ground truth
 2. For each test session, extracts the 11 features
 3. Predicts probability of apply vs view
 4. Assigns action with highest probability
@@ -108,7 +108,8 @@ The model has **two independent components**:
 - Users with high apply_ratio tend to keep applying
 - last_action_is_apply captures behavioral momentum
 - top1_similarity indicates model confidence in recommendation
-- 83.57% accuracy is competitive
+- SVM with RBF kernel captures non-linear patterns
+- 83.70% accuracy on validation set
 
 ---
 
@@ -118,7 +119,7 @@ Session [305, 299, 300] → Co-occurrence → Top-10: [88, 214, 138, ...]
                                               ↓
                         Features: apply_ratio=0.2, seq_length=3, ...
                                               ↓
-                        RandomForest → Action: "view"
+                        SVM (RBF) → Action: "view"
                                               ↓
                 Final Output: session_id=0, action="view", job_id="[88, 214, 138, ...]"
 ```
@@ -140,8 +141,9 @@ python src\scripts\generate_cooccurrence_submission.py
 **Results:**
 - MRR: 0.0345
 - Hit Rate for the top 10 jobs: 10.99%
-- Action Accuracy: 83.57%
-- **Final Score: 0.2748**
+- Action Accuracy: 83.70%
+- **Final Score: 0.2752**
+
     
 **Generated Files:**
 - Model: `experiments/cooccurrence_model.pkl`
