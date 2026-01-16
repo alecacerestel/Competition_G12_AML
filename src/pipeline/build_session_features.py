@@ -62,7 +62,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["num_view"] = out["seq_length"] - out["num_apply"]
     out["apply_ratio"] = out["num_apply"] / out["seq_length"]
 
-    # 2.5) Convert actions to binary sequence (for neural models)
+    #Convert actions to binary sequence 
     action_map = {"view": False, "apply": True}
 
     def to_binary_actions(actions):
@@ -75,11 +75,82 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["prev_job_id"] = out["jobs_list"].apply(prev_item)
     out["last_action"] = out["actions_list"].apply(last_item)
     out["prev_action"] = out["actions_list"].apply(prev_item)
-    out["action_changed"] = out["actions_list"].apply(changed_last_two)
+    out["is_last_action_changed"] = out["actions_list"].apply(changed_last_two)
     # Turn actions into binary --> it is not on our notebook but may be useful
     action_map = {"view": 0, "apply": 1}
     out["last_action_bin"] = out["last_action"].map(action_map).astype("int8")
     out["prev_action_bin"] = out["prev_action"].map(action_map).astype("int8")
+
+    # consecutive behavior
+    def max_consecutive(actions, target):
+        best = 0
+        current = 0
+        for a in actions:
+            if a == target:
+                current += 1
+                if current > best:
+                    best = current
+            else:
+                current = 0
+        return best
+
+    def tail_consecutive(actions, target):
+        count = 0
+        for a in reversed(actions):
+            if a == target:
+                count += 1
+            else:
+                break
+        return count
+
+    def switch_count(actions):
+        if len(actions) < 2:
+            return 0
+        changes = 0
+        prev = actions[0]
+        for a in actions[1:]:
+            if a != prev:
+                changes += 1
+            prev = a
+        return changes
+
+    #
+    def compute_max_view_run(actions):
+        return max_consecutive(actions, "view")
+
+    def compute_max_apply_run(actions):
+        return max_consecutive(actions, "apply")
+
+    def compute_last_view_run(actions):
+        return tail_consecutive(actions, "view")
+
+    def compute_last_apply_run(actions):
+        return tail_consecutive(actions, "apply")
+
+    out["max_view_run"] = out["actions_list"].apply(compute_max_view_run)
+    out["max_apply_run"] = out["actions_list"].apply(compute_max_apply_run)
+    out["last_view_run"] = out["actions_list"].apply(compute_last_view_run)
+    out["last_apply_run"] = out["actions_list"].apply(compute_last_apply_run)
+    out["switch_count"] = out["actions_list"].apply(switch_count)
+
+    # session state based on runs and apply ratio
+    def assign_state_from_runs(apply_ratio, max_view_run, max_apply_run):
+        # thresholds: simples para começar; ajuste depois se quiser
+        if apply_ratio <= 0.2 or max_view_run >= 4:
+            return "exploratory"
+        if apply_ratio >= 0.8 or max_apply_run >= 3:
+            return "decisive"
+        return "mixed"
+
+    states = []
+    for _, row in out.iterrows():
+        st = assign_state_from_runs(row["apply_ratio"], row["max_view_run"], row["max_apply_run"])
+        states.append(st)
+    out["session_state"] = states
+
+    out["is_exploratory"] = (out["session_state"] == "exploratory").astype("int8")
+    out["is_mixed"]       = (out["session_state"] == "mixed").astype("int8")
+    out["is_decisive"]    = (out["session_state"] == "decisive").astype("int8")
 
 
     # 4) Final table with selected features
@@ -90,14 +161,21 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         "num_apply",
         "apply_ratio",
         "actions_bin",
-
         # "last_job_id",
-        # "last_action",
+        "prev_action",
+        "last_action",
         # "last_action_bin",
         # "prev_job_id",
-        # "prev_action",
         # "prev_action_bin",
-        "action_changed",
+        "is_last_action_changed",
+        "max_view_run",
+        "max_apply_run",
+        "last_view_run",
+        "last_apply_run",
+        "switch_count",
+        "is_exploratory",
+        "is_mixed",
+        "is_decisive",
     ]].copy()
 
     return features
