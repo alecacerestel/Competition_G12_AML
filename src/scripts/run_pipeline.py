@@ -7,9 +7,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
 import numpy as np
-from pipeline.data_processor import DataProcessor
-from pipeline.model_trainer import CollaborativeFilteringRecommender
-from pipeline.evaluator import Evaluator
+from src.pipeline.data_processor import DataProcessor
+from src.pipeline.model_trainer import CollaborativeFilteringRecommender, ContentBasedRecommender, HybridRecommender
+from src.pipeline.evaluator import Evaluator
 
 
 def main():
@@ -26,6 +26,12 @@ def main():
     print(f"✓ Loaded {len(y_train)} training targets")
     print(f"✓ Loaded {len(x_test)} test sessions")
     print(f"✓ Loaded {len(jobs)} job listings")
+    
+    # Step 1.5: Fit Content-Based Recommender
+    print("\n[STEP 1.5] Fitting Content-Based Recommender...")
+    cb_recommender = ContentBasedRecommender()
+    cb_recommender.fit(jobs)
+    print("✓ Content-Based Recommender fitted")
     
     # Step 2: Prepare data sequences (only for X data)
     print("\n[STEP 2] Preparing data sequences...")
@@ -52,6 +58,11 @@ def main():
         x_train_split, y_train_split
     )
     
+    # Step 4.5: Create Hybrid Recommender
+    print("\n[STEP 4.5] Creating Hybrid Recommender...")
+    hybrid_recommender = HybridRecommender(trainer, cb_recommender)
+    print("✓ Hybrid Recommender created")
+    
     # Step 5: Make predictions on validation set
     print("\n[STEP 5] Making predictions on validation set...")
     y_pred_top10_val = []
@@ -72,9 +83,9 @@ def main():
         else:
             test_vector = csr_matrix((1, len(job_cats)))
         
-        # Get predictions using the model's predict_next_step function
-        top_10_jobs, applies_for, p_c_avg = trainer.predict_next_step(
-            test_vector, R_train, job_cats, k=50, theta=0.5
+        # Get predictions using the hybrid model's predict_next_step function
+        top_10_jobs, applies_for, p_c_avg = hybrid_recommender.predict_next_step(
+            test_vector, R_train, job_cats, jobs_viewed, k=50, theta=0.5
         )
         
         y_pred_top10_val.append(top_10_jobs)
@@ -98,60 +109,65 @@ def main():
     print(f"✓ Action Accuracy: {action_accuracy:.4f}")
     print(f"✓ Final Score (0.7*MRR + 0.3*Accuracy): {final_score:.4f}")
     
-    # Step 7: Retrain on full training data
-    print("\n[STEP 7] Retraining model on full training data...")
-    R_full, session_cats_full, job_cats_full, _ = trainer.build_interaction_matrix(
-        x_train_prepared, y_train
-    )
+    # # Step 7: Retrain on full training data
+    # print("\n[STEP 7] Retraining model on full training data...")
+    # R_full, session_cats_full, job_cats_full, _ = trainer.build_interaction_matrix(
+    #     x_train_prepared, y_train
+    # )
     
-    # Step 8: Generate predictions for test set
-    print("\n[STEP 8] Generating predictions for test set...")
-    y_pred_top10_test = []
-    y_pred_actions_test = []
+    # # Step 7.5: Create Hybrid Recommender for full data
+    # print("\n[STEP 7.5] Creating Hybrid Recommender for full data...")
+    # hybrid_recommender_full = HybridRecommender(trainer, cb_recommender)
+    # print("✓ Hybrid Recommender for full data created")
     
-    for idx, row in x_test_prepared.iterrows():
-        jobs_viewed = row['jobs_list']
+    # # Step 8: Generate predictions for test set
+    # print("\n[STEP 8] Generating predictions for test set...")
+    # y_pred_top10_test = []
+    # y_pred_actions_test = []
+    
+    # for idx, row in x_test_prepared.iterrows():
+    #     jobs_viewed = row['jobs_list']
         
-        # Create sparse vector for this session
-        job_indices = [np.where(job_cats_full == job)[0][0] for job in jobs_viewed if job in job_cats_full]
-        if job_indices:
-            test_vector = csr_matrix(
-                (np.ones(len(job_indices)), (np.zeros(len(job_indices)), job_indices)),
-                shape=(1, len(job_cats_full))
-            )
-        else:
-            test_vector = csr_matrix((1, len(job_cats_full)))
+    #     # Create sparse vector for this session
+    #     job_indices = [np.where(job_cats_full == job)[0][0] for job in jobs_viewed if job in job_cats_full]
+    #     if job_indices:
+    #         test_vector = csr_matrix(
+    #             (np.ones(len(job_indices)), (np.zeros(len(job_indices)), job_indices)),
+    #             shape=(1, len(job_cats_full))
+    #         )
+    #     else:
+    #         test_vector = csr_matrix((1, len(job_cats_full)))
         
-        # Get predictions
-        top_10_jobs, applies_for, _ = trainer.predict_next_step(
-            test_vector, R_full, job_cats_full, k=50, theta=0.5
-        )
+    #     # Get predictions
+    #     top_10_jobs, applies_for, _ = hybrid_recommender_full.predict_next_step(
+    #         test_vector, R_full, job_cats_full, jobs_viewed, k=50, theta=0.5
+    #     )
         
-        y_pred_top10_test.append(top_10_jobs)
-        y_pred_actions_test.append(applies_for)
+    #     y_pred_top10_test.append(top_10_jobs)
+    #     y_pred_actions_test.append(applies_for)
     
-    print(f"✓ Generated {len(y_pred_top10_test)} test predictions")
+    # print(f"✓ Generated {len(y_pred_top10_test)} test predictions")
     
-    # Step 9: Prepare submission
-    print("\n[STEP 9] Preparing submission...")
-    # Convert numpy int64 to regular int
-    y_pred_top10_test_clean = [
-        [int(job_id) for job_id in jobs] for jobs in y_pred_top10_test
-    ]
+    # # Step 9: Prepare submission
+    # print("\n[STEP 9] Preparing submission...")
+    # # Convert numpy int64 to regular int
+    # y_pred_top10_test_clean = [
+    #     [int(job_id) for job_id in jobs] for jobs in y_pred_top10_test
+    # ]
     
-    submission_df = pd.DataFrame({
-        'session_id': x_test['session_id'].values,
-        'predicted_jobs': y_pred_top10_test_clean,
-        'applies_for': y_pred_actions_test
-    })
+    # submission_df = pd.DataFrame({
+    #     'session_id': x_test['session_id'].values,
+    #     'predicted_jobs': y_pred_top10_test_clean,
+    #     'applies_for': y_pred_actions_test
+    # })
     
-    submission_path = Path(__file__).parent.parent.parent / 'submissions' / 'predictions.csv'
-    submission_path.parent.mkdir(exist_ok=True)
-    # Force overwrite by removing if exists
-    if submission_path.exists():
-        submission_path.unlink()
-    submission_df.to_csv(submission_path, index=False)
-    print(f"✓ Submission saved to {submission_path}")
+    # submission_path = Path(__file__).parent.parent.parent / 'submissions' / 'predictions.csv'
+    # submission_path.parent.mkdir(exist_ok=True)
+    # # Force overwrite by removing if exists
+    # if submission_path.exists():
+    #     submission_path.unlink()
+    # submission_df.to_csv(submission_path, index=False)
+    # print(f"✓ Submission saved to {submission_path}")
     
     print("\n" + "=" * 80)
     print("PIPELINE COMPLETED SUCCESSFULLY")
@@ -160,7 +176,7 @@ def main():
     print(f"  - MRR Score: {mrr_score:.4f}")
     print(f"  - Action Accuracy: {action_accuracy:.4f}")
     print(f"  - Final Score: {final_score:.4f}")
-    print(f"\nTest predictions: {len(y_pred_top10_test)} sessions")
+    # print(f"\nTest predictions: {len(y_pred_top10_test)} sessions")
 
 
 if __name__ == "__main__":
