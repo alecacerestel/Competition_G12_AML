@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pipe.config import Config, DEFAULT_CONFIG
 from pipe.data.loader import DataLoader
 from pipe.models.job_ranker import JobRanker
-from pipe.models.action_predictor import ActionPredictor
+from pipe.models.action_predictor_svm import ActionPredictorSVM
 
 import pickle
 import pandas as pd

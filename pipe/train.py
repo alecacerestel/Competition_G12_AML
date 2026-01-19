@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pipe.config import Config, DEFAULT_CONFIG
 from pipe.data.loader import DataLoader
 from pipe.models.job_ranker import JobRanker
-from pipe.models.action_predictor import ActionPredictor
+from pipe.models.action_predictor_svm import ActionPredictorSVM
 from pipe.evaluation.metrics import evaluate_model
 
 import pickle
@@ -57,9 +57,9 @@ def train(config: Config = None):
     )
     job_ranker.fit(train_df, data_loader.job_to_idx)
     
-    # 4. Train Action Predictor
+    # 4. Train Action Predictor (SVM)
     print("\n" + "-" * 60)
-    action_predictor = ActionPredictor(threshold=config.action_threshold)
+    action_predictor = ActionPredictorSVM(C=1.0, gamma='scale')
     action_predictor.fit(train_df)
     
     # 5. Evaluate on validation set
@@ -126,7 +126,7 @@ def tune_hyperparameters(config: Config = None):
                 )
                 job_ranker.fit(train_df, data_loader.job_to_idx)
                 
-                action_predictor = ActionPredictor()
+                action_predictor = ActionPredictorSVM()
                 action_predictor.fit(train_df)
                 
                 # Evaluate
