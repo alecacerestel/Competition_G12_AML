@@ -26,12 +26,28 @@ Phase 2: Baseline Models
 - Temporal cross-validation
 
 Phase 3: Feature Engineering
-- Sequence features (order, recency, frequency)
-- Job features (text similarity with NLP)
-- Session features (behavior patterns)
+- Sequence features (order, recency, frequency) - ahi esta malparidos
+- Job features (text similarity with NLP) - ahi esta malparidos  
+- Session features (behavior patterns) - ahi esta malparidos
 
 Phase 4: Modeling
 - Collaborative Filtering (item-item, user-item)
 - Online Learning (River library, bandit algorithms)
 - Sequential models (RNN/LSTM if applicable)
 - Ensemble models
+
+
+Data
+===============
+**Training Data**
+- `x_train.csv`: Input features for training set containing user session sequences and job interactions
+- `y_train.csv`: Target labels for training set with the jobs that users actually applied to
+
+**Test Data**
+- `x_test.csv`: Input features for test set used for final predictions
+
+**Submission**
+- `random_predictions.csv`: Example submission file showing the required format for predictions
+
+**Supplementary Files**
+- `job_listings.json`: Complete catalog of job postings with detailed information (title, description, requirements, etc.)
