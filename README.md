@@ -12,6 +12,8 @@ The final score combines both predictions using a weighted formula where job ran
 
 **Challenge Link:** [ENS Challenge](https://challengedata.ens.fr/participants/challenges/164/)
 
+**Drive link:** [Drive](https://drive.google.com/drive/u/0/folders/1YCL4CPkvpp2KI8DE986CrnSjX8JLxSXP)
+
 
 ## Problem Context
 
