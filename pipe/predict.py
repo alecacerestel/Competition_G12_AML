@@ -103,8 +103,8 @@ def generate_submission(config: Config = None, output_file: str = None):
         
         submission_rows.append({
             'session_id': pred['session_id'],
-            'job_ids': job_ids_str,
-            'applies_for': pred['applies_for']
+            'action': 'apply' if pred['applies_for'] == 1 else 'view',
+            'job_id': job_ids_str,
         })
     
     submission_df = pd.DataFrame(submission_rows)
