@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import pandas as pd
 
-# Ajuste o root do projeto se necessário
+# Set up project root for imports
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -38,6 +38,22 @@ def prev_item(lst):
 def changed_last_two(actions):
     return int(actions[-1] != actions[-2])
 
+# Calculate action change ratio
+def action_change_ratio(actions):
+    n = len(actions)
+    if n <= 1:
+        return 0.0
+
+    changes = 0
+    prev = actions[0]
+    for a in actions[1:]:
+        if a != prev:
+            changes += 1
+        prev = a
+
+    return changes / (n - 1)
+
+
 
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -60,7 +76,8 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["seq_length"] = out["jobs_list"].apply(len)
     out["num_apply"] = out["actions_list"].apply(count_apply)
     out["num_view"] = out["seq_length"] - out["num_apply"]
-    out["apply_ratio"] = out["num_apply"] / out["seq_length"]
+    out["apply_ratio"] = out["num_apply"] / out["seq_length"] if out["seq_length"].all() > 0 else 0
+    out["view_ratio"] = out["num_view"] / out["seq_length"] if out["seq_length"].all() > 0 else 0
 
     #Convert actions to binary sequence 
     action_map = {"view": False, "apply": True}
@@ -80,6 +97,12 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     action_map = {"view": 0, "apply": 1}
     out["last_action_bin"] = out["last_action"].map(action_map).astype("int8")
     out["prev_action_bin"] = out["prev_action"].map(action_map).astype("int8")
+
+    # Binary feature: last action is apply
+    out["last_action_is_apply"] = (out["actions_list"].str.get(-1).eq("apply").fillna(False).astype("int8"))
+
+    # action change ratio
+    out["action_change_ratio"] = out["actions_list"].apply(action_change_ratio)
 
     # consecutive behavior
     def max_consecutive(actions, target):
@@ -114,7 +137,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
             prev = a
         return changes
 
-    #
+    # consecutive actions features
     def compute_max_view_run(actions):
         return max_consecutive(actions, "view")
 
@@ -153,29 +176,36 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["is_decisive"]    = (out["session_state"] == "decisive").astype("int8")
 
 
+  
+
+
+
     # 4) Final table with selected features
     features = out[[
-        "session_id",
+        #"session_id",
         "seq_length",
-        "num_view",
-        "num_apply",
+        #"num_view",
+        #"num_apply",
         "apply_ratio",
-        "actions_bin",
+        "view_ratio",
+        #"actions_bin",
         # "last_job_id",
-        "prev_action",
-        "last_action",
+        #"prev_action",
+        #"last_action",
+        "last_action_is_apply",
         # "last_action_bin",
         # "prev_job_id",
         # "prev_action_bin",
-        "is_last_action_changed",
-        "max_view_run",
-        "max_apply_run",
-        "last_view_run",
-        "last_apply_run",
-        "switch_count",
-        "is_exploratory",
-        "is_mixed",
-        "is_decisive",
+        #"is_last_action_changed",
+        "action_change_ratio",
+        #"max_view_run",
+        # "max_apply_run",
+        # "last_view_run",
+        # "last_apply_run",
+        # "switch_count",
+        # "is_exploratory",
+        # "is_mixed",
+        # "is_decisive",
     ]].copy()
 
     return features
