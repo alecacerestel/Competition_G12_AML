@@ -143,10 +143,7 @@ This captures preferences from users with similar behavior patterns.
 The final score combines all four signals with learned weights:
 
 ```
-final_score(j) = w_transition * transition_score(j) +
-                 w_cooccurrence * cooccurrence_score(j) +
-                 w_cf * cf_score(j) +
-                 w_popularity * popularity_score(j)
+final_score(j) = w_transition * transition_score(j) + w_cooccurrence * cooccurrence_score(j) + w_cf * cf_score(j) + w_popularity * popularity_score(j)
 ```
 
 Weights are tuned via grid search:
@@ -243,7 +240,7 @@ This will:
 - Evaluate on validation set
 - Save models to `experiments/`
 
-Expected output:
+Expected output (example):
 ```
 ============================================================
 Job Recommendation Training Pipeline

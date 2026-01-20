@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from pipeline.contrastive_model import (
     SessionDataset, ContrastiveRecommender, ContrastiveTrainer
 )
-from pipeline.feature_engineer import FeatureEngineer
+from pipeline.build_session_features import build_features
 from torch.utils.data import DataLoader
 
 
@@ -40,8 +40,7 @@ class ContrastivePipeline:
                 lambda x: ast.literal_eval(x) if isinstance(x, str) else x
             )
             
-            feature_engineer = FeatureEngineer()
-            x_train = feature_engineer.extract_all_features(x_train)
+            x_train = build_features(x_train)
             x_train.to_csv(x_train_path, index=False)
         else:
             x_train = pd.read_csv(x_train_path)

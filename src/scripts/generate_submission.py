@@ -21,7 +21,7 @@ def load_test_data(data_path: Path):
         print("Test features not found. Using raw test data...")
         x_test = pd.read_csv(data_path / 'x_test_jCBBNP2.csv')
         
-        from pipeline.feature_engineer import FeatureEngineer
+        from pipeline.build_session_features import build_features
         
         x_test['jobs_list'] = x_test['job_ids'].apply(
             lambda x: ast.literal_eval(x) if isinstance(x, str) else x
@@ -30,8 +30,7 @@ def load_test_data(data_path: Path):
             lambda x: ast.literal_eval(x) if isinstance(x, str) else x
         )
         
-        feature_engineer = FeatureEngineer()
-        x_test = feature_engineer.extract_all_features(x_test)
+        x_test = build_features(x_test)
         x_test.to_csv(x_test_path, index=False)
     else:
         x_test = pd.read_csv(x_test_path)
