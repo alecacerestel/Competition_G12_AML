@@ -32,7 +32,6 @@ class DataProcessor:
                 })
                 
             self.jobs = pd.DataFrame(descriptions_data)
-            print(self.jobs['summary'])
         
         self.x_train = pd.read_csv(X_TRAIN_FILE)
         self.y_train = pd.read_csv(Y_TRAIN_FILE)

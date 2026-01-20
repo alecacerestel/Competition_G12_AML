@@ -7,8 +7,6 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from data_processor import DataProcessor  
-
 
 # ---------- Helpers ----------
 def parse_list_column(value):
@@ -212,6 +210,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
+    from .data_processor import DataProcessor  # Import here to avoid circular import
     # load raw data
     processor = DataProcessor()
     jobs, x_train, y_train, x_test = processor.load_data()
